@@ -1,0 +1,16 @@
+venv/
+*.xlsx
+*.png
+
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore MacOS specific file
+.DS_Store
+
+# Ignore environment variables files
+.env
+.venv
