@@ -20,15 +20,25 @@ except FileNotFoundError as e:
 
 # --- Agregar campos faltantes desde la base de datos ---
 try:
-    import sqlite3  # Cambia por tu motor si usas PostgreSQL o MySQL
-    conn = sqlite3.connect('ruta_a_tu_base_de_datos.db')  # ← Ajusta esto
+    import sqlite3
+    import os
 
+    # Crear base de datos si no existe
+    if not os.path.exists('alebrije.db'):
+        with sqlite3.connect('alebrije.db') as conn:
+            with open('alebrije1 (1).sql', 'r', encoding='utf-8') as f:
+                conn.executescript(f.read())
+            conn.commit()
+
+    # Conectar a la base de datos ya convertida
+    conn = sqlite3.connect('alebrije.db')
     df_extra = pd.read_sql_query(
         'SELECT id AS producto_id, precio, imagen_url FROM productos',
         conn
     )
     df_products = df_products.merge(df_extra, on='producto_id', how='left')
     conn.close()
+
 except Exception as e:
     print(f"Error al cargar imagen_url y precio desde la base: {e}")
 
@@ -216,7 +226,7 @@ CORS(app)
 # --- Ruta para la página principal ---
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return jsonify({'status': 'API funcionando correctamente'})
 
 # --- Ruta para recomendaciones personalizadas ---
 @app.route('/recommend', methods=['GET'])
