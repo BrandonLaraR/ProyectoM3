@@ -18,24 +18,6 @@ except FileNotFoundError as e:
     print(f"Error: {e}")
     exit()
 
-# --- Agregar campos faltantes desde la base de datos ---
-try:
-    import sqlite3
-
-    # Conectar a la base de datos ya convertida
-    conn = sqlite3.connect('alebrije1 (1).sql')
-    df_extra = pd.read_sql_query(
-        'SELECT id AS producto_id, precio, imagen_url FROM productos',
-        conn
-    )
-    df_products = df_products.merge(df_extra, on='producto_id', how='left')
-    conn.close()
-
-except Exception as e:
-    print(f"Error al cargar imagen_url y precio desde la base: {e}")
-
-
-
 # --- Convertir frozenset a listas ---
 def parse_frozenset(x):
     if pd.isna(x):
