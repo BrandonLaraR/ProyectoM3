@@ -21,17 +21,9 @@ except FileNotFoundError as e:
 # --- Agregar campos faltantes desde la base de datos ---
 try:
     import sqlite3
-    import os
-
-    # Crear base de datos si no existe
-    if not os.path.exists('alebrije.db'):
-        with sqlite3.connect('alebrije.db') as conn:
-            with open('alebrije1 (1).sql', 'r', encoding='utf-8') as f:
-                conn.executescript(f.read())
-            conn.commit()
 
     # Conectar a la base de datos ya convertida
-    conn = sqlite3.connect('alebrije.db')
+    conn = sqlite3.connect('alebrije1 (1).sql')
     df_extra = pd.read_sql_query(
         'SELECT id AS producto_id, precio, imagen_url FROM productos',
         conn
