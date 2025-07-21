@@ -18,6 +18,22 @@ except FileNotFoundError as e:
     print(f"Error: {e}")
     exit()
 
+# --- Agregar campos faltantes desde la base de datos ---
+try:
+    import sqlite3  # Cambia por tu motor si usas PostgreSQL o MySQL
+    conn = sqlite3.connect('ruta_a_tu_base_de_datos.db')  # ← Ajusta esto
+
+    df_extra = pd.read_sql_query(
+        'SELECT id AS producto_id, precio, imagen_url FROM productos',
+        conn
+    )
+    df_products = df_products.merge(df_extra, on='producto_id', how='left')
+    conn.close()
+except Exception as e:
+    print(f"Error al cargar imagen_url y precio desde la base: {e}")
+
+
+
 # --- Convertir frozenset a listas ---
 def parse_frozenset(x):
     if pd.isna(x):
@@ -76,16 +92,19 @@ def recommend_by_cluster(purchased_items, df_products, purchased_product_ids, to
         if product['producto_id'] not in purchased_product_ids:
             priority = 1.0 if product['tipo'].upper() in purchased_types else 0.5
             recommendations.append({
-                'item': product['tipo'],
-                'producto_id': convert_to_native_types(product['producto_id']),
-                'descripcion_producto': product['descripcion_producto'],
-                'confidence': 0.0,
-                'lift': 0.0,
-                'product_cluster': convert_to_native_types(product['Cluster']),
-                'priority': priority,
-                'tipo_id': convert_to_native_types(product.get('tipo_id')),
-                'categoria_id': convert_to_native_types(product.get('categoria_id'))
-            })
+    'item': product['tipo'],
+    'producto_id': convert_to_native_types(product['producto_id']),
+    'descripcion_producto': product['descripcion_producto'],
+    'confidence': 0.0,
+    'lift': 0.0,
+    'product_cluster': convert_to_native_types(product['Cluster']),
+    'priority': priority,
+    'tipo_id': convert_to_native_types(product.get('tipo_id')),
+    'categoria_id': convert_to_native_types(product.get('categoria_id')),
+    'precio': convert_to_native_types(product.get('precio')),
+    'imagen_url': product.get('imagen_url') or ''
+})
+
 
     recommendations = sorted(recommendations, key=lambda x: (x['priority'], x['product_cluster'], x['descripcion_producto']), reverse=True)[:top_n]
     return recommendations, f"Recomendaciones basadas en clústeres: {product_clusters}, Priorizando tipos: {purchased_types}"
@@ -131,16 +150,19 @@ def recommend_products(user_id, df_users, df_transactions, df_rules, df_products
                 for product in matched_products:
                     if product['producto_id'] not in purchased_product_ids:
                         recommendations.append({
-                            'item': item,
-                            'producto_id': convert_to_native_types(product['producto_id']),
-                            'descripcion_producto': product['descripcion_producto'],
-                            'confidence': rule['confidence'],
-                            'lift': rule['lift'],
-                            'product_cluster': convert_to_native_types(product['Cluster']),
-                            'priority': 1.0,
-                            'tipo_id': convert_to_native_types(product.get('tipo_id')),
-                            'categoria_id': convert_to_native_types(product.get('categoria_id'))
-                        })
+    'item': item,
+    'producto_id': convert_to_native_types(product['producto_id']),
+    'descripcion_producto': product['descripcion_producto'],
+    'confidence': rule['confidence'],
+    'lift': rule['lift'],
+    'product_cluster': convert_to_native_types(product['Cluster']),
+    'priority': 1.0,
+    'tipo_id': convert_to_native_types(product.get('tipo_id')),
+    'categoria_id': convert_to_native_types(product.get('categoria_id')),
+    'precio': convert_to_native_types(product.get('precio')),
+    'imagen_url': product.get('imagen_url') or ''
+})
+
         else:
             debug_info.append(f"Regla descartada {antecedents} → {consequents} porque los antecedentes no coinciden con {purchased_items}")
 
@@ -170,16 +192,19 @@ def recommend_related_products(product_id, df_products, top_n=10):
         if product['producto_id'] != product_id:
             priority = 1.0 if product['tipo'].upper() == product_type else 0.5
             recommendations.append({
-                'item': product['tipo'],
-                'producto_id': convert_to_native_types(product['producto_id']),
-                'descripcion_producto': product['descripcion_producto'],
-                'confidence': 0.0,
-                'lift': 0.0,
-                'product_cluster': convert_to_native_types(product['Cluster']),
-                'priority': priority,
-                'tipo_id': convert_to_native_types(product.get('tipo_id')),
-                'categoria_id': convert_to_native_types(product.get('categoria_id'))
-            })
+    'item': product['tipo'],
+    'producto_id': convert_to_native_types(product['producto_id']),
+    'descripcion_producto': product['descripcion_producto'],
+    'confidence': 0.0,
+    'lift': 0.0,
+    'product_cluster': convert_to_native_types(product['Cluster']),
+    'priority': priority,
+    'tipo_id': convert_to_native_types(product.get('tipo_id')),
+    'categoria_id': convert_to_native_types(product.get('categoria_id')),
+    'precio': convert_to_native_types(product.get('precio')),
+    'imagen_url': product.get('imagen_url') or ''
+})
+
 
     recommendations = sorted(recommendations, key=lambda x: (x['priority'], x['descripcion_producto']), reverse=True)[:top_n]
     return recommendations, f"Productos relacionados para producto {product_id} (Clúster {product_cluster}, Tipo {product_type})"
